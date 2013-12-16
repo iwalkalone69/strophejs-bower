@@ -724,7 +724,7 @@ Strophe = {
      *  The version of the Strophe library. Unreleased builds will have
      *  a version of head-HASH where HASH is a partial revision.
      */
-    VERSION: "1.1.0",
+    VERSION: "1.1.1",
 
     /** Constants: XMPP Namespace Constants
      *  Common namespace constants from the XMPP RFCs and XEPs.
@@ -2333,7 +2333,7 @@ Strophe.Connection.prototype = {
      */
     attach: function (jid, sid, rid, callback, wait, hold, wind)
     {
-        this._proto.attach(jid, sid, rid, callback, wait, hold, wind);
+        this._proto._attach(jid, sid, rid, callback, wait, hold, wind);
     },
 
     /** Function: xmlInput
