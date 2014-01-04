@@ -87,32 +87,15 @@ var Base64 = (function () {
  * See http://pajhome.org.uk/crypt/md5 for details.
  */
 
-/*
- * Configurable variables. You may need to tweak these to be compatible with
- * the server-side, but the defaults work in most cases.
- */
-var hexcase = 0;  /* hex output format. 0 - lowercase; 1 - uppercase        */
-var b64pad  = "="; /* base-64 pad character. "=" for strict RFC compliance   */
-var chrsz   = 8;  /* bits per input character. 8 - ASCII; 16 - Unicode      */
+/* Some functions and variables have been stripped for use with Strophe */
 
 /*
  * These are the functions you'll usually want to call
  * They take string arguments and return either hex or base-64 encoded strings
  */
-function hex_sha1(s){return binb2hex(core_sha1(str2binb(s),s.length * chrsz));}
-function b64_sha1(s){return binb2b64(core_sha1(str2binb(s),s.length * chrsz));}
-function str_sha1(s){return binb2str(core_sha1(str2binb(s),s.length * chrsz));}
-function hex_hmac_sha1(key, data){ return binb2hex(core_hmac_sha1(key, data));}
+function str_sha1(s){return binb2str(core_sha1(str2binb(s),s.length * 8));}
 function b64_hmac_sha1(key, data){ return binb2b64(core_hmac_sha1(key, data));}
 function str_hmac_sha1(key, data){ return binb2str(core_hmac_sha1(key, data));}
-
-/*
- * Perform a simple self-test to see if the VM is working
- */
-function sha1_vm_test()
-{
-  return hex_sha1("abc") == "a9993e364706816aba3e25717850c26c9cd0d89d";
-}
 
 /*
  * Calculate the SHA-1 of an array of big-endian words, and a bit length
@@ -188,7 +171,7 @@ function sha1_kt(t)
 function core_hmac_sha1(key, data)
 {
   var bkey = str2binb(key);
-  if (bkey.length > 16) { bkey = core_sha1(bkey, key.length * chrsz); }
+  if (bkey.length > 16) { bkey = core_sha1(bkey, key.length * 8); }
 
   var ipad = new Array(16), opad = new Array(16);
   for (var i = 0; i < 16; i++)
@@ -197,7 +180,7 @@ function core_hmac_sha1(key, data)
     opad[i] = bkey[i] ^ 0x5C5C5C5C;
   }
 
-  var hash = core_sha1(ipad.concat(str2binb(data)), 512 + data.length * chrsz);
+  var hash = core_sha1(ipad.concat(str2binb(data)), 512 + data.length * 8);
   return core_sha1(opad.concat(hash), 512 + 160);
 }
 
@@ -227,10 +210,10 @@ function rol(num, cnt)
 function str2binb(str)
 {
   var bin = [];
-  var mask = (1 << chrsz) - 1;
-  for (var i = 0; i < str.length * chrsz; i += chrsz)
+  var mask = 255;
+  for (var i = 0; i < str.length * 8; i += 8)
   {
-    bin[i>>5] |= (str.charCodeAt(i / chrsz) & mask) << (32 - chrsz - i%32);
+    bin[i>>5] |= (str.charCodeAt(i / 8) & mask) << (24 - i%32);
   }
   return bin;
 }
@@ -241,25 +224,10 @@ function str2binb(str)
 function binb2str(bin)
 {
   var str = "";
-  var mask = (1 << chrsz) - 1;
-  for (var i = 0; i < bin.length * 32; i += chrsz)
+  var mask = 255;
+  for (var i = 0; i < bin.length * 32; i += 8)
   {
-    str += String.fromCharCode((bin[i>>5] >>> (32 - chrsz - i%32)) & mask);
-  }
-  return str;
-}
-
-/*
- * Convert an array of big-endian words to a hex string.
- */
-function binb2hex(binarray)
-{
-  var hex_tab = hexcase ? "0123456789ABCDEF" : "0123456789abcdef";
-  var str = "";
-  for (var i = 0; i < binarray.length * 4; i++)
-  {
-    str += hex_tab.charAt((binarray[i>>2] >> ((3 - i%4)*8+4)) & 0xF) +
-           hex_tab.charAt((binarray[i>>2] >> ((3 - i%4)*8  )) & 0xF);
+    str += String.fromCharCode((bin[i>>5] >>> (24 - i%32)) & mask);
   }
   return str;
 }
@@ -279,7 +247,7 @@ function binb2b64(binarray)
                ((binarray[i+2 >> 2] >> 8 * (3 - (i+2)%4)) & 0xFF);
     for (j = 0; j < 4; j++)
     {
-      if (i * 8 + j * 6 > binarray.length * 32) { str += b64pad; }
+      if (i * 8 + j * 6 > binarray.length * 32) { str += "="; }
       else { str += tab.charAt((triplet >> 6*(3-j)) & 0x3F); }
     }
   }
@@ -294,15 +262,11 @@ function binb2b64(binarray)
  * See http://pajhome.org.uk/crypt/md5 for more info.
  */
 
-var MD5 = (function () {
-    /*
-     * Configurable variables. You may need to tweak these to be compatible with
-     * the server-side, but the defaults work in most cases.
-     */
-    var hexcase = 0;  /* hex output format. 0 - lowercase; 1 - uppercase */
-    var b64pad  = ""; /* base-64 pad character. "=" for strict RFC compliance */
-    var chrsz   = 8;  /* bits per input character. 8 - ASCII; 16 - Unicode */
+/*
+ * Everything that isn't used by Strophe has been stripped here!
+ */
 
+var MD5 = (function () {
     /*
      * Add integers, wrapping at 2^32. This uses 16-bit operations internally
      * to work around bugs in some JS interpreters.
@@ -322,14 +286,12 @@ var MD5 = (function () {
 
     /*
      * Convert a string to an array of little-endian words
-     * If chrsz is ASCII, characters >255 have their hi-byte silently ignored.
      */
     var str2binl = function (str) {
         var bin = [];
-        var mask = (1 << chrsz) - 1;
-        for(var i = 0; i < str.length * chrsz; i += chrsz)
+        for(var i = 0; i < str.length * 8; i += 8)
         {
-            bin[i>>5] |= (str.charCodeAt(i / chrsz) & mask) << (i%32);
+            bin[i>>5] |= (str.charCodeAt(i / 8) & 255) << (i%32);
         }
         return bin;
     };
@@ -339,10 +301,9 @@ var MD5 = (function () {
      */
     var binl2str = function (bin) {
         var str = "";
-        var mask = (1 << chrsz) - 1;
-        for(var i = 0; i < bin.length * 32; i += chrsz)
+        for(var i = 0; i < bin.length * 32; i += 8)
         {
-            str += String.fromCharCode((bin[i>>5] >>> (i % 32)) & mask);
+            str += String.fromCharCode((bin[i>>5] >>> (i % 32)) & 255);
         }
         return str;
     };
@@ -351,33 +312,12 @@ var MD5 = (function () {
      * Convert an array of little-endian words to a hex string.
      */
     var binl2hex = function (binarray) {
-        var hex_tab = hexcase ? "0123456789ABCDEF" : "0123456789abcdef";
+        var hex_tab = "0123456789abcdef";
         var str = "";
         for(var i = 0; i < binarray.length * 4; i++)
         {
             str += hex_tab.charAt((binarray[i>>2] >> ((i%4)*8+4)) & 0xF) +
                 hex_tab.charAt((binarray[i>>2] >> ((i%4)*8  )) & 0xF);
-        }
-        return str;
-    };
-
-    /*
-     * Convert an array of little-endian words to a base-64 string
-     */
-    var binl2b64 = function (binarray) {
-        var tab = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-        var str = "";
-        var triplet, j;
-        for(var i = 0; i < binarray.length * 4; i += 3)
-        {
-            triplet = (((binarray[i   >> 2] >> 8 * ( i   %4)) & 0xFF) << 16) |
-                (((binarray[i+1 >> 2] >> 8 * ((i+1)%4)) & 0xFF) << 8 ) |
-                ((binarray[i+2 >> 2] >> 8 * ((i+2)%4)) & 0xFF);
-            for(j = 0; j < 4; j++)
-            {
-                if(i * 8 + j * 6 > binarray.length * 32) { str += b64pad; }
-                else { str += tab.charAt((triplet >> 6*(3-j)) & 0x3F); }
-            }
         }
         return str;
     };
@@ -503,24 +443,6 @@ var MD5 = (function () {
     };
 
 
-    /*
-     * Calculate the HMAC-MD5, of a key and some data
-     */
-    var core_hmac_md5 = function (key, data) {
-        var bkey = str2binl(key);
-        if(bkey.length > 16) { bkey = core_md5(bkey, key.length * chrsz); }
-
-        var ipad = new Array(16), opad = new Array(16);
-        for(var i = 0; i < 16; i++)
-        {
-            ipad[i] = bkey[i] ^ 0x36363636;
-            opad[i] = bkey[i] ^ 0x5C5C5C5C;
-        }
-
-        var hash = core_md5(ipad.concat(str2binl(data)), 512 + data.length * chrsz);
-        return core_md5(opad.concat(hash), 512 + 128);
-    };
-
     var obj = {
         /*
          * These are the functions you'll usually want to call.
@@ -528,34 +450,11 @@ var MD5 = (function () {
          * strings.
          */
         hexdigest: function (s) {
-            return binl2hex(core_md5(str2binl(s), s.length * chrsz));
-        },
-
-        b64digest: function (s) {
-            return binl2b64(core_md5(str2binl(s), s.length * chrsz));
+            return binl2hex(core_md5(str2binl(s), s.length * 8));
         },
 
         hash: function (s) {
-            return binl2str(core_md5(str2binl(s), s.length * chrsz));
-        },
-
-        hmac_hexdigest: function (key, data) {
-            return binl2hex(core_hmac_md5(key, data));
-        },
-
-        hmac_b64digest: function (key, data) {
-            return binl2b64(core_hmac_md5(key, data));
-        },
-
-        hmac_hash: function (key, data) {
-            return binl2str(core_hmac_md5(key, data));
-        },
-
-        /*
-         * Perform a simple self-test to see if the VM is working
-         */
-        test: function () {
-            return MD5.hexdigest("abc") === "900150983cd24fb0d6963f7d28e17f72";
+            return binl2str(core_md5(str2binl(s), s.length * 8));
         }
     };
 
@@ -568,6 +467,7 @@ var MD5 = (function () {
     Copyright 2006-2008, OGG, LLC
 */
 
+/* jslint configuration: */
 /*global document, window, setTimeout, clearTimeout, console,
     XMLHttpRequest, ActiveXObject,
     Base64, MD5,
@@ -724,7 +624,7 @@ Strophe = {
      *  The version of the Strophe library. Unreleased builds will have
      *  a version of head-HASH where HASH is a partial revision.
      */
-    VERSION: "1.1.1",
+    VERSION: "1.1.2",
 
     /** Constants: XMPP Namespace Constants
      *  Common namespace constants from the XMPP RFCs and XEPs.
@@ -2059,6 +1959,8 @@ Strophe.TimedHandler.prototype = {
  *
  *  > var conn = new Strophe.Connection("/http-bind/");
  *
+ *  WebSocket options:
+ *
  *  If you want to connect to the current host with a WebSocket connection you
  *  can tell Strophe to use WebSockets through a "protocol" attribute in the
  *  optional options parameter. Valid values are "ws" for WebSocket and "wss"
@@ -2067,12 +1969,22 @@ Strophe.TimedHandler.prototype = {
  *
  *  > var conn = new Strophe.Connection("/xmpp-websocket/", {protocol: "wss"});
  *
- *  Note that relative URLs starting _NOT_ with a "/" will also include the path
+ *  Note that relative URLs _NOT_ starting with a "/" will also include the path
  *  of the current site.
  *
  *  Also because downgrading security is not permitted by browsers, when using
  *  relative URLs both BOSH and WebSocket connections will use their secure
  *  variants if the current connection to the site is also secure (https).
+ *
+ *  BOSH options:
+ *
+ *  by adding "sync" to the options, you can control if requests will
+ *  be made synchronously or not. The default behaviour is asynchronous.
+ *  If you want to make requests synchronous, make "sync" evaluate to true:
+ *  > var conn = new Strophe.Connection("/http-bind/", {sync: true});
+ *  You can also toggle this on an already established connection:
+ *  > conn.options.sync = true;
+ *
  *
  *  Parameters:
  *    (String) service - The BOSH or WebSocket service URL.
@@ -2087,8 +1999,8 @@ Strophe.Connection = function (service, options)
     this.service = service;
 
     // Configuration options
-    this._options = options || {};
-    var proto = this._options.protocol || "";
+    this.options = options || {};
+    var proto = this.options.protocol || "";
 
     // Select protocal based on service or options
     if (service.indexOf("ws:") === 0 || service.indexOf("wss:") === 0 ||
@@ -3840,6 +3752,7 @@ Strophe.Connection.prototype.mechanisms[Strophe.SASLMD5.prototype.name] = Stroph
     Copyright 2006-2008, OGG, LLC
 */
 
+/* jslint configuration: */
 /*global document, window, setTimeout, clearTimeout, console,
     XMLHttpRequest, ActiveXObject,
     Base64, MD5,
@@ -4478,7 +4391,7 @@ Strophe.Bosh.prototype = {
                           "." + req.sends + " posting");
 
             try {
-                req.xhr.open("POST", this._conn.service, true);
+                req.xhr.open("POST", this._conn.service, this._conn.options.sync ? false : true);
             } catch (e2) {
                 Strophe.error("XHR open failed.");
                 if (!this._conn.connected) {
@@ -4493,8 +4406,8 @@ Strophe.Bosh.prototype = {
             // or on a gradually expanding retry window for reconnects
             var sendFunc = function () {
                 req.date = new Date();
-                if (self._conn._options.customHeaders){
-                    var headers = self._conn._options.customHeaders;
+                if (self._conn.options.customHeaders){
+                    var headers = self._conn.options.customHeaders;
                     for (var header in headers) {
                         if (headers.hasOwnProperty(header)) {
                             req.xhr.setRequestHeader(header, headers[header]);
@@ -4683,6 +4596,7 @@ Strophe.Bosh.prototype = {
 */
 
 /*global document, window, setTimeout, clearTimeout, console,
+    XMLHttpRequest, ActiveXObject,
     Base64, MD5,
     Strophe, $build, $msg, $iq, $pres */
 
@@ -4725,7 +4639,7 @@ Strophe.Websocket = function(connection) {
         // URL together from options, current URL and the path.
         var new_service = "";
 
-        if (connection._options.protocol === "ws" && window.location.protocol !== "https:") {
+        if (connection.options.protocol === "ws" && window.location.protocol !== "https:") {
             new_service += "ws";
         } else {
             new_service += "wss";
