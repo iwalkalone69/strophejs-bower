@@ -2864,10 +2864,7 @@ Strophe.Connection.prototype = {
         this._authentication.legacy_auth = false;
 
         // Check for the stream:features tag
-        var hasFeatures = bodyWrap.getElementsByTagName("stream:features").length > 0;
-        if (!hasFeatures) {
-            hasFeatures = bodyWrap.getElementsByTagName("features").length > 0;
-        }
+        var hasFeatures = bodyWrap.getElementsByTagNameNS(Strophe.NS.STREAM, "features").length > 0;
         var mechanisms = bodyWrap.getElementsByTagName("mechanism");
         var matched = [];
         var i, mech, found_authentication = false;
@@ -2876,7 +2873,7 @@ Strophe.Connection.prototype = {
             return;
         }
         if (mechanisms.length > 0) {
-            for (i = 0; i < mechanisms.length; i++) {
+            for (i = 1; i < mechanisms.length; i++) {
                 mech = Strophe.getText(mechanisms[i]);
                 if (this.mechanisms[mech]) matched.push(this.mechanisms[mech]);
             }
@@ -3581,7 +3578,7 @@ Strophe.SASLSHA1 = function() {};
  *
  */
 
-Strophe.SASLSHA1.prototype = new Strophe.SASLMechanism("SCRAM-SHA-1", true, 40);
+Strophe.SASLSHA1.prototype = new Strophe.SASLMechanism("SCRAM-SHA-1", true, 5);
 
 Strophe.SASLSHA1.test = function(connection) {
   return connection.authcid !== null;
@@ -4702,7 +4699,7 @@ Strophe.Websocket.prototype = {
      *     true if there was a streamerror, false otherwise.
      */
     _check_streamerror: function (bodyWrap, connectstatus) {
-        var errors = bodyWrap.getElementsByTagName("stream:error");
+        var errors = bodyWrap.getElementsByTagNameNS(Strophe.NS.STREAM, "error");
         if (errors.length === 0) {
             return false;
         }
