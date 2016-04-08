@@ -4877,7 +4877,7 @@ Strophe.Websocket.prototype = {
      */
     _disconnect: function (pres)
     {
-        if (this.socket.readyState !== WebSocket.CLOSED) {
+        if (this.socket && this.socket.readyState !== WebSocket.CLOSED) {
             if (pres) {
                 this._conn.send(pres);
             }
